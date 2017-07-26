@@ -404,7 +404,7 @@ var resizePizzas = function(size) {
 
   // Changes the value for the size of the pizza above the slider
   function changeSliderLabel(size) {
-    switch(size) {
+    switch (size) {
       case "1":
         document.querySelector("#pizzaSize").innerHTML = "Small";
         return;
@@ -421,38 +421,35 @@ var resizePizzas = function(size) {
 
   changeSliderLabel(size);
 
-   // Returns the size difference to change a pizza element from one size to another. Called by changePizzaSlices(size).
-  function determineDx (elem, size) {
-    var oldWidth = elem.offsetWidth;
-    var windowWidth = document.querySelector("#randomPizzas").offsetWidth;
-    var oldSize = oldWidth / windowWidth;
-
-    // Changes the slider value to a percent width
-    function sizeSwitcher (size) {
-      switch(size) {
-        case "1":
-          return 0.25;
-        case "2":
-          return 0.3333;
-        case "3":
-          return 0.5;
-        default:
-          console.log("bug in sizeSwitcher");
-      }
+  // Iterates through pizza elements on the page and changes their widths.
+  // Changes related to this function were made while following along with
+  // Cameron Pittman in Udacity's Browser Rendering Optimization course.
+  function changePizzaSizes(size) {
+    // Removed determineDx and sizeSwitcher functions up above. Added switch
+    // statement below instead for determining newWidth percentage.
+    var newWidth;
+    switch (size) {
+      case "1":
+        newWidth = 25;
+        break;
+      case "2":
+        newWidth = 33.3;
+        break;
+      case "3":
+        newWidth = 50;
+        break;
+      default:
+        console.log("Error determining newWidth percentage.");
     }
 
-    var newSize = sizeSwitcher(size);
-    var dx = (newSize - oldSize) * windowWidth;
+    // Document query selecting is now done only once, outside of the for loop below
+    var randomPizzas = document.querySelectorAll(".randomPizzaContainer");
 
-    return dx;
-  }
+    for (var i = 0; i < randomPizzas.length; i++) {
+      // Removed document query selecting, determineDX function call, and old
+      // method of determining newWidth.
 
-  // Iterates through pizza elements on the page and changes their widths
-  function changePizzaSizes(size) {
-    for (var i = 0; i < document.querySelectorAll(".randomPizzaContainer").length; i++) {
-      var dx = determineDx(document.querySelectorAll(".randomPizzaContainer")[i], size);
-      var newwidth = (document.querySelectorAll(".randomPizzaContainer")[i].offsetWidth + dx) + 'px';
-      document.querySelectorAll(".randomPizzaContainer")[i].style.width = newwidth;
+      randomPizzas[i].style.width = newWidth + "%";
     }
   }
 
@@ -467,9 +464,12 @@ var resizePizzas = function(size) {
 
 window.performance.mark("mark_start_generating"); // collect timing data
 
-// This for-loop actually creates and appends all of the pizzas when the page loads
-for (var i = 2; i < 100; i++) {
-  var pizzasDiv = document.getElementById("randomPizzas");
+// I moved pizzasDiv out of the for loop below
+var pizzasDiv = document.getElementById("randomPizzas");
+
+// This for-loop actually creates and appends all of the pizzas when the page loads.
+// I decreased the number of pizzas that are created.
+for (var i = 2; i < 48; i++) {
   pizzasDiv.appendChild(pizzaElementGenerator(i));
 }
 
@@ -501,9 +501,11 @@ function updatePositions() {
   frame++;
   window.performance.mark("mark_start_frame");
 
-  var items = document.querySelectorAll('.mover');
+  // I moved the document query and calculation out of the for loop. This has made the
+  // greatest improvement in the site's performance.
+  var scrollPosition = document.body.scrollTop / 1250;
   for (var i = 0; i < items.length; i++) {
-    var phase = Math.sin((document.body.scrollTop / 1250) + (i % 5));
+    var phase = Math.sin((scrollPosition) + (i % 5));
     items[i].style.left = items[i].basicLeft + 100 * phase + 'px';
   }
 
@@ -517,14 +519,21 @@ function updatePositions() {
   }
 }
 
-// runs updatePositions on scroll
-window.addEventListener('scroll', updatePositions);
+// I moved the items variable containing the .mover elements out of updatePositions.
+// I only declare it here so that it becomes a global variable. Performance has
+// increased as a result of having moved it out of updatePositions.
+var items;
 
 // Generates the sliding pizzas when the page loads.
-document.addEventListener('DOMContentLoaded', function() {
+// I changed the event listener into an onload event instead. By doing so,
+// the recalculate styles and layout warnings are eliminated from the
+// Chrome DevTools Performance tab.
+window.onload = function() {
   var cols = 8;
   var s = 256;
-  for (var i = 0; i < 200; i++) {
+
+  // I decreased the number of moving pizzas to be created
+  for (var i = 0; i < 30; i++) {
     var elem = document.createElement('img');
     elem.className = 'mover';
     elem.src = "images/pizza.png";
@@ -534,5 +543,17 @@ document.addEventListener('DOMContentLoaded', function() {
     elem.style.top = (Math.floor(i / cols) * s) + 'px';
     document.querySelector("#movingPizzas1").appendChild(elem);
   }
+
+  // The items variable is assigned a value here. It will now be available for use
+  // by both this onload anonymous function and the updatePositions function.
+  // As suggessted by the Udacity Webcasts, I decided to use getElementsByClassName
+  // instead of querySelectorAll for the improved DOM access.
+  items = document.getElementsByClassName('mover');
+
+  // Runs updatePositions on scroll.
+  // I moved the scroll listener inside of this onload anonymous function to ensure
+  // that updatePositions would not try to access the items variable until it had
+  // been given a value.
+  window.addEventListener('scroll', updatePositions);
   updatePositions();
-});
+};
