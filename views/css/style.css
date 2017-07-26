@@ -34,8 +34,8 @@ form {
   width: 256px;
 
   /*
-    Adding the will-change property significantly reduces the amount
-    of painting that the browser has to do.
+    Added the will-change property to reduce the amount of painting that
+    the browser has to do.
   */
   will-change: transform;
   z-index: -1;
