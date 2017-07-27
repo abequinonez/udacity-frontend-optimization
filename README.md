@@ -53,4 +53,4 @@ views/pizza.html was optimized by:
 
   4. Decreased the number of moving pizzas that are created
 
-  5. Added the will-change property to the .mover class in style.css to reduce the amount of painting that the browser has to do.
+  5. Added the will-change property to the .mover class in views/css/style.css to reduce the amount of painting that the browser has to do.
